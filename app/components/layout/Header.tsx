@@ -8,7 +8,7 @@ import MobileMenuToggle from "./MobileMenuToggle";
 const navigation = [
   // { name: 'About', href: '/about' },
   // { name: 'Blog', href: '#' },
-  { name: "Templates", href: "/templates" },
+  // { name: "Templates", href: "/templates" },
   // { name: 'Showcase', href: '/showcase' },
   // { name: 'Guide', href: 'https://www.notion.so/d-sket/D-SKET-Help-Center-24c3947be60a806ba4ffefa911787f4f' },
   { name: "Pricing", href: "/pricing" },

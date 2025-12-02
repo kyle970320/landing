@@ -2,7 +2,7 @@
 
 export default function VideoSection() {
   return (
-    <div className="w-full px-40 py-30">
+    <div className="container mx-auto">
       <video
         className="w-full rounded-2xl"
         src="/d-sket-video.mp4"

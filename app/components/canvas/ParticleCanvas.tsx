@@ -356,9 +356,9 @@ const ParticleCanvas = ({
     );
 
     const colorControls = {
-      color1: theme === "dark" ? "#9d4edd" : "#9d4edd",
-      color2: theme === "dark" ? "#9d4edd" : "#9d4edd",
-      color3: theme === "dark" ? "#9d4edd" : "#9d4edd",
+      color1: theme === "dark" ? "#4f39f6" : "#4f39f6",
+      color2: theme === "dark" ? "#4f39f6" : "#4f39f6",
+      color3: theme === "dark" ? "#4f39f6" : "#4f39f6",
     };
 
     const renderMaterial = new THREE.ShaderMaterial({

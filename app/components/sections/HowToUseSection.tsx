@@ -568,7 +568,7 @@ const HowToUseSection = () => {
 
   return (
     <section className="py-16 md:py-24 bg-[#FBFBFB]">
-      <div className="container mx-auto px-4 max-w-6xl">
+      <div className="page-container mx-auto">
         {/* 상단 타이틀 */}
         <div className="text-center mb-12 md:mb-16">
           <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">
@@ -580,7 +580,7 @@ const HowToUseSection = () => {
         </div>
 
         {/* 카드 2 × 2 그리드 */}
-        <div className="mx-auto max-w-[900px] grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
+        <div className="mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
           {steps.map((step) => (
             <motion.article
               key={step.id}
@@ -599,7 +599,7 @@ const HowToUseSection = () => {
               </div>
 
               {/* 텍스트 영역 */}
-              <div className="mt-7 px-10">
+              <div className="mt-7 px-8">
                 <p className="text-xs md:text-sm text-gray-400 mb-1">
                   {step.label}
                 </p>

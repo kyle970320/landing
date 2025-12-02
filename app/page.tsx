@@ -2,6 +2,9 @@ import ParticleCanvas from "./components/canvas/ParticleCanvas";
 import HeroSection from "./components/sections/HeroSection";
 import HowToUseSection from "./components/sections/HowToUseSection";
 import VideoSection from "./components/sections/VideoSection";
+import ReviewSection from "./components/sections/ReviewSection";
+import EndingSection from "./components/sections/EndingSection";
+import ExplainSection from "./components/sections/ExplainSection";
 
 export default function Home() {
   return (
@@ -10,6 +13,9 @@ export default function Home() {
       <HeroSection />
       <VideoSection />
       <HowToUseSection />
+      <ReviewSection />
+      <ExplainSection />
+      <EndingSection />
     </div>
   );
 }
