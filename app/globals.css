@@ -16,6 +16,7 @@
   --color-sub: #f6a53a;
   --color-main-title: #333333;
   --color-sub-title: #666666;
+  --breakpoint-custom-lg: 72rem;
 }
 
 @layer utilities {

@@ -1,3 +1,5 @@
+import { cn } from "@/app/ilb/cn";
+
 interface Props {
   title: string;
   desc: string;
@@ -6,9 +8,16 @@ interface Props {
 }
 
 export default function TemplateCard(props: Props) {
-  const { title, desc, url } = props;
+  const { title, desc, url, type } = props;
+  const typeColorClass =
+    type === "Pro" ? "bg-main text-white" : "bg-white text-main-title";
+  const typeClassName = cn(
+    "absolute top-2 right-2 z-2 text-sm font-bold px-2 py-1 rounded-[4px]",
+    typeColorClass,
+  );
   return (
-    <div className="group flex flex-col aspect-10/9 overflow-hidden bg-white rounded-md shadow-md transition-all hover:shadow-xl">
+    <div className="group relative flex flex-col aspect-10/9 overflow-hidden bg-white rounded-md shadow-md transition-all hover:shadow-xl">
+      <div className={typeClassName}>{type}</div>
       <div className="overflow-hidden">
         <img
           className="w-full transition-all group-hover:scale-110"
