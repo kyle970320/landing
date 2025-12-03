@@ -17,7 +17,7 @@ const navigation = [
 
 export default function Header() {
   return (
-    <header className="absolute z-100 w-full bg-white border-b border-indigo-100">
+    <header className="fixed z-100 w-full bg-[rgba(255,255,255,0.5)] border-b border-indigo-100 backdrop-blur-sm">
       <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-indigo-400 via-indigo-600 to-black" />
       <nav
         aria-label="Global"
