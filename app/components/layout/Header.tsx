@@ -8,7 +8,7 @@ import MobileMenuToggle from "./MobileMenuToggle";
 const navigation = [
   // { name: 'About', href: '/about' },
   // { name: 'Blog', href: '#' },
-  // { name: "Templates", href: "/templates" },
+  { name: "Templates", href: "/templates" },
   // { name: 'Showcase', href: '/showcase' },
   // { name: 'Guide', href: 'https://www.notion.so/d-sket/D-SKET-Help-Center-24c3947be60a806ba4ffefa911787f4f' },
   { name: "Pricing", href: "/pricing" },
@@ -18,7 +18,7 @@ const navigation = [
 export default function Header() {
   return (
     <header className="absolute z-100 w-full bg-white border-b border-indigo-100">
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-400 via-indigo-600 to-black" />
+      <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-indigo-400 via-indigo-600 to-black" />
       <nav
         aria-label="Global"
         className="flex w-full items-center justify-between px-6 py-4"

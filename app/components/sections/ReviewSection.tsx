@@ -103,7 +103,7 @@ export default function ReviewSection() {
   const splited = splitIntoThree(reviews);
 
   return (
-    <div className="page-container mx-auto">
+    <div className="page-container">
       <div className="text-center mb-12 md:mb-16">
         <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">
           D-Sket으로 사용자 리뷰

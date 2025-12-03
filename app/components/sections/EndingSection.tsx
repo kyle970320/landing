@@ -6,7 +6,7 @@ export default function EndingSection() {
     <div className="relative min-h-screen">
       {/* <FreeTextParticles /> */}
       <RotatingRingParticles />
-      <div className="page-container min-h-screen mx-auto flex flex-col gap-2 items-center justify-center text-5xl">
+      <div className="page-container min-h-screen flex flex-col gap-2 items-center justify-center text-5xl">
         <div>
           딱 <span className="font-bold">3분</span>만 투자해서
         </div>

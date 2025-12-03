@@ -88,6 +88,7 @@ float snoise(vec3 v)
 const TEXT_SIZE = 800;
 const HALF_SIZE = TEXT_SIZE / 2;
 const MAX_PARTICLE_COUNT = 60000;
+const TEXTS = ["FREE", "PRO", "PREMIUM"];
 
 function createTextImageData(text: string): ImageData {
   const canvas = document.createElement("canvas");
@@ -100,7 +101,7 @@ function createTextImageData(text: string): ImageData {
 
   ctx.fillStyle = "white";
   ctx.textAlign = "center";
-  ctx.textBaseline = "top";
+  ctx.textBaseline = "bottom";
 
   // ✅ 글씨 크기 60px 로 축소
   ctx.font =
@@ -123,6 +124,7 @@ class TextParticleSystem {
   pointsBaseData: number[][] = [];
   pointsData: number[] = [];
   nearestPointsData: number[][] = [];
+  texts: string[] = [];
 
   count = 0;
   size = 128; // ⭐ 텍스처 크기 절반으로 (128 → 64)
@@ -139,6 +141,10 @@ class TextParticleSystem {
 
   mesh!: THREE.Points;
   renderMaterial!: THREE.ShaderMaterial;
+
+  // 전환 관련
+  textTransition = 0;
+  textTransitionActive = false;
 
   constructor(sceneWrapper: any, texts: string[]) {
     this.sceneWrapper = sceneWrapper;
@@ -320,6 +326,24 @@ class TextParticleSystem {
 
     return rt;
   }
+  setActiveText(index: number) {
+    if (!this.nearestPointsData[index]) return;
+
+    // 기존 텍스처 정리
+    if (this.posNearestTex) {
+      this.posNearestTex.dispose();
+    }
+
+    // 선택한 텍스트의 nearestPoint로 텍스처 생성
+    this.posNearestTex = this.createDataTexturePosition(
+      this.nearestPointsData[index],
+    );
+    this.simMaterial.uniforms.uPosNearest.value = this.posNearestTex;
+
+    // 텍스트 전환 애니메이션 트리거
+    this.textTransition = 0;
+    this.textTransitionActive = true;
+  }
 
   init() {
     this.posTex = this.createDataTexturePosition(this.pointsData);
@@ -485,7 +509,7 @@ class TextParticleSystem {
           gl_Position = projectionMatrix * viewSpace;
 
           gl_PointSize = ((vScale * 2.0) * (uPixelRatio * 0.5) * uParticleScale) + 
-                         (0.1 * uPixelRatio);
+                         (0.05 * uPixelRatio);
         }
       `,
       fragmentShader: `
@@ -546,6 +570,15 @@ class TextParticleSystem {
 
     const hover = hoverNum;
 
+    if (this.textTransitionActive) {
+      const duration = 0.8;
+      this.textTransition += delta / duration;
+      if (this.textTransition >= 1.0) {
+        this.textTransition = 1.0;
+        this.textTransitionActive = false;
+      }
+    }
+
     this.simMaterial.uniforms.uPosition.value = this.everRendered
       ? this.rt1.texture
       : this.posTex;
@@ -571,12 +604,15 @@ class TextParticleSystem {
 }
 
 interface Props {
+  activeIndex: number;
   hoverNum: number;
 }
 export default function TextCanvas(props: Props) {
-  const { hoverNum } = props;
+  const { hoverNum, activeIndex } = props;
   const containerRef = useRef<HTMLDivElement | null>(null);
   const hoverRef = useRef(hoverNum);
+  const systemRef = useRef<TextParticleSystem | null>(null); // ✅ 추가
+
   useEffect(() => {
     hoverRef.current = hoverNum;
   }, [hoverNum]);
@@ -598,8 +634,11 @@ export default function TextCanvas(props: Props) {
     el.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.z = 4.8;
+    const baseAspect = (width / height) * 0.9;
+    const baseZ = 4.8;
+
+    const camera = new THREE.PerspectiveCamera(45, baseAspect, 0.1, 100);
+    camera.position.z = baseZ;
 
     const clock = new THREE.Clock();
 
@@ -626,7 +665,8 @@ export default function TextCanvas(props: Props) {
       clock,
     };
 
-    const system = new TextParticleSystem(sceneWrapper, ["D-SKET"]);
+    const system = new TextParticleSystem(sceneWrapper, TEXTS);
+    systemRef.current = system; // ✅ 저장
 
     let animId: number;
     const animate = () => {
@@ -640,9 +680,14 @@ export default function TextCanvas(props: Props) {
     const handleResize = () => {
       const w = el.clientWidth || window.innerWidth;
       const h = el.clientHeight || window.innerHeight;
+      const aspect = (w / h) * 0.9;
       renderer.setSize(w, h);
-      camera.aspect = w / h;
+      camera.aspect = aspect;
+      camera.position.z = baseZ * (baseAspect / aspect);
       camera.updateProjectionMatrix();
+      const zDiff = camera.position.z - baseZ;
+      system.mesh.position.y = zDiff * 0.22;
+      sceneWrapper.pixelRatio = renderer.getPixelRatio();
       system.resize();
     };
 
@@ -665,15 +710,26 @@ export default function TextCanvas(props: Props) {
       if (renderer.domElement.parentNode) {
         renderer.domElement.parentNode.removeChild(renderer.domElement);
       }
+      systemRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    if (!systemRef.current) return;
+    let timeoutId;
+    hoverRef.current = 0;
+    timeoutId = setTimeout(() => {
+      hoverRef.current = hoverNum;
+    }, 500);
+    systemRef.current.setActiveText(activeIndex);
+  }, [activeIndex]);
 
   return (
     <div
       ref={containerRef}
       style={{
         position: "absolute",
-        top: "-70%",
+        top: "0%",
         width: "100vw",
         height: "100vh",
         overflow: "hidden",

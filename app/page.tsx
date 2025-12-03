@@ -8,7 +8,7 @@ import ExplainSection from "./components/sections/ExplainSection";
 
 export default function Home() {
   return (
-    <div className="min-h-screen items-center justify-center bg-[#FBFBFB] font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-[#FBFBFB] font-sans overflow-x-hidden">
       <ParticleCanvas />
       <HeroSection />
       <VideoSection />

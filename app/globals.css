@@ -10,6 +10,18 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-museo: var(--font-museo);
+  --font-noto: var(--font-noto);
+  --color-main: #4f39f6;
+  --color-sub: #f6a53a;
+  --color-main-title: #333333;
+  --color-sub-title: #666666;
+}
+
+@layer utilities {
+  .price-shadow {
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);
+  }
 }
 
 /* @media (prefers-color-scheme: dark) {
@@ -27,6 +39,7 @@ body {
 .page-container {
   width: 100%;
   padding-inline: 5%;
+  margin-inline: auto;
   @media (width >= 40rem /* 640px */) {
     max-width: 40rem /* 640px */;
   }

@@ -568,7 +568,7 @@ const HowToUseSection = () => {
 
   return (
     <section className="py-16 md:py-24 bg-[#FBFBFB]">
-      <div className="page-container mx-auto">
+      <div className="page-container">
         {/* 상단 타이틀 */}
         <div className="text-center mb-12 md:mb-16">
           <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">
