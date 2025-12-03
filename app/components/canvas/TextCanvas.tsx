@@ -87,7 +87,7 @@ float snoise(vec3 v)
 
 const TEXT_SIZE = 800;
 const HALF_SIZE = TEXT_SIZE / 2;
-const MAX_PARTICLE_COUNT = 60000;
+const MAX_PARTICLE_COUNT = 45000;
 const TEXTS = ["FREE", "PRO", "PREMIUM"];
 
 function createTextImageData(text: string): ImageData {
@@ -103,15 +103,14 @@ function createTextImageData(text: string): ImageData {
   ctx.textAlign = "center";
   ctx.textBaseline = "bottom";
 
-  // ✅ 글씨 크기 60px 로 축소
   ctx.font =
     "bold 140px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
 
-  // ✅ 항상 TEXT_SIZE/2, TEXT_SIZE/2 기준이라 정중앙
   ctx.fillText(text, TEXT_SIZE / 2, TEXT_SIZE / 2);
 
   return ctx.getImageData(0, 0, TEXT_SIZE, TEXT_SIZE);
 }
+
 class TextParticleSystem {
   sceneWrapper: any;
   renderer: THREE.WebGLRenderer;
@@ -127,7 +126,7 @@ class TextParticleSystem {
   texts: string[] = [];
 
   count = 0;
-  size = 128; // ⭐ 텍스처 크기 절반으로 (128 → 64)
+  size = 128;
   length = this.size * this.size;
 
   posTex!: THREE.DataTexture;
@@ -142,7 +141,6 @@ class TextParticleSystem {
   mesh!: THREE.Points;
   renderMaterial!: THREE.ShaderMaterial;
 
-  // 전환 관련
   textTransition = 0;
   textTransitionActive = false;
 
@@ -162,6 +160,7 @@ class TextParticleSystem {
     this.init();
   }
 
+  // === 1차 Poisson: 전체 영역에 기본 포인트 생성 ===
   createPoints() {
     const pds = new PoissonDiskSampling({
       shape: [TEXT_SIZE, TEXT_SIZE],
@@ -172,7 +171,6 @@ class TextParticleSystem {
 
     const points = pds.fill() as number[][];
 
-    // ✅ 텍스처에서 표현 가능한 최대 개수까지로 제한
     const maxCount = Math.min(MAX_PARTICLE_COUNT, this.length);
 
     let selected: number[][] = points;
@@ -198,9 +196,10 @@ class TextParticleSystem {
       );
     }
 
-    this.count = Math.min(this.pointsData.length / 2, maxCount); // ✅ 안전하게
+    this.count = Math.min(this.pointsData.length / 2, maxCount);
   }
 
+  // === 텍스트별 타겟 포인트: base 포인트 기준으로 imageData 주변 탐색 ===
   createPointsFromTexts(texts: string[]) {
     const imageDatas = texts.map((t) => createTextImageData(t));
     this.nearestPointsData = [];
@@ -216,70 +215,64 @@ class TextParticleSystem {
       });
   }
 
+  // base 포인트 주변에서 알파>threshold인 글자 픽셀 탐색
   createPointsDistanceData(
     imageData: ImageData,
     pointsBase: number[][],
     index: number,
   ): { nearestPoints: number[]; index: number } {
-    const distanceFunction = (point: number[], img: ImageData) => {
-      const px = Math.round(point[0]);
-      const py = Math.round(point[1]);
-      if (px < 0 || py < 0 || px >= img.width || py >= img.height) {
-        return 1;
-      }
-      const baseIndex = (px + py * img.width) * 4;
-
-      // ✅ 알파 채널을 사용해서 글자 영역 인식
-      const alpha = img.data[baseIndex + 3] / 255; // 0 = 배경, 1 = 글자
-
-      // ✅ 글자일수록 0, 배경일수록 1이 되도록 반전
-      const v = 1.0 - alpha;
-
-      // 너무 극단적이지 않게 약간 곡선 적용 (원하면 생략 가능)
-      return v * v * v;
-    };
-
-    const poissonDisk = new PoissonDiskSampling({
-      shape: [TEXT_SIZE, TEXT_SIZE],
-      minDistance: 1,
-      maxDistance: 30,
-      tries: 10,
-      distanceFunction: (point: number[]) => distanceFunction(point, imageData),
-    });
-
-    const points = poissonDisk.fill() as number[][];
     const nearestPoints: number[] = [];
 
-    const baseCount = Math.min(pointsBase.length, MAX_PARTICLE_COUNT);
+    const width = imageData.width;
+    const height = imageData.height;
+
+    const baseCount = Math.min(
+      pointsBase.length,
+      this.count,
+      MAX_PARTICLE_COUNT,
+    );
+
+    const SEARCH_RADIUS = 24; // 글자 윤곽으로 끌어당길 최대 거리
+    const STEP = 1; // 샘플링 간격 (1로 줄이면 더 촘촘하지만 느려짐)
+    const ALPHA_THRESHOLD = 0.4; // 글자 판정 기준
 
     for (let i = 0; i < baseCount; i++) {
-      let nearestPoint: number[] | null = null;
-      let nearestDistance = Infinity;
+      const base = pointsBase[i];
+      let bx = base[0];
+      let by = base[1];
 
-      // ⭐ 샘플링 비율 증가로 연산 감소
-      for (let j = 0; j < points.length; j++) {
-        if (Math.random() < 0.9) continue; // 90% 스킵
+      // 기본값은 자기 자리
+      let bestX = bx;
+      let bestY = by;
+      let bestDistSq = Infinity;
 
-        const dx = points[j][0] - pointsBase[i][0];
-        const dy = points[j][1] - pointsBase[i][1];
-        const distance = Math.sqrt(dx * dx + dy * dy);
+      const cx = Math.round(bx);
+      const cy = Math.round(by);
 
-        const pixelRedValue = distanceFunction(points[j], imageData);
+      for (let dy = -SEARCH_RADIUS; dy <= SEARCH_RADIUS; dy += STEP) {
+        const py = cy + dy;
+        if (py < 0 || py >= height) continue;
 
-        if (pixelRedValue < 1 && distance < nearestDistance) {
-          nearestDistance = distance;
-          nearestPoint = points[j];
+        for (let dx = -SEARCH_RADIUS; dx <= SEARCH_RADIUS; dx += STEP) {
+          const px = cx + dx;
+          if (px < 0 || px >= width) continue;
+
+          const idx = (px + py * width) * 4;
+          const alpha = imageData.data[idx + 3] / 255;
+
+          // 글자 영역만 후보로
+          if (alpha < ALPHA_THRESHOLD) continue;
+
+          const distSq = dx * dx + dy * dy;
+          if (distSq < bestDistSq) {
+            bestDistSq = distSq;
+            bestX = px;
+            bestY = py;
+          }
         }
       }
 
-      if (!nearestPoint) {
-        nearestPoint = [pointsBase[i][0], pointsBase[i][1]];
-      }
-
-      nearestPoints.push(
-        nearestPoint[0] - HALF_SIZE, // ✅
-        nearestPoint[1] - HALF_SIZE, // ✅
-      );
+      nearestPoints.push(bestX - HALF_SIZE, bestY - HALF_SIZE);
     }
 
     return { nearestPoints, index };
@@ -289,7 +282,6 @@ class TextParticleSystem {
     const data = new Float32Array(this.length * 4);
     for (let i = 0; i < this.count; i++) {
       const idx = i * 4;
-      // ✅ HALF_SIZE 로 나눠서 [-1, 1] 범위에 가깝게 맞추기
       data[idx + 0] = (arr[i * 2 + 0] ?? 0) * (1 / HALF_SIZE);
       data[idx + 1] = (arr[i * 2 + 1] ?? 0) * (1 / HALF_SIZE);
       data[idx + 2] = 0;
@@ -326,21 +318,19 @@ class TextParticleSystem {
 
     return rt;
   }
+
   setActiveText(index: number) {
     if (!this.nearestPointsData[index]) return;
 
-    // 기존 텍스처 정리
     if (this.posNearestTex) {
       this.posNearestTex.dispose();
     }
 
-    // 선택한 텍스트의 nearestPoint로 텍스처 생성
     this.posNearestTex = this.createDataTexturePosition(
       this.nearestPointsData[index],
     );
     this.simMaterial.uniforms.uPosNearest.value = this.posNearestTex;
 
-    // 텍스트 전환 애니메이션 트리거
     this.textTransition = 0;
     this.textTransitionActive = true;
   }
@@ -365,7 +355,6 @@ class TextParticleSystem {
     this.simScene = new THREE.Scene();
     this.simCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
-    // ⭐ 시뮬레이션 셰이더 최적화
     this.simMaterial = new THREE.ShaderMaterial({
       uniforms: {
         uPosition: { value: this.posTex },
@@ -380,7 +369,7 @@ class TextParticleSystem {
         }
       `,
       fragmentShader: `
-        precision mediump float; // ⭐ highp → mediump
+        precision mediump float;
 
         uniform sampler2D uPosition;
         uniform sampler2D uPosRefs;
@@ -402,7 +391,6 @@ class TextParticleSystem {
           vec2 targetPos = mix(refPos, nearestPos, uIsHovering * uIsHovering);
           float dist = length(targetPos - pos);
 
-          // ⭐ 간단한 보간만 사용
           if (dist > 0.005) {
             vec2 direction = normalize(targetPos - pos + 1e-5) * 0.01;
             float distStrength = smoothstep(0.15, 0.0, dist);
@@ -426,7 +414,6 @@ class TextParticleSystem {
     const simQuad = new THREE.Mesh(simQuadGeo, this.simMaterial);
     this.simScene.add(simQuad);
 
-    // ⭐ 렌더 셰이더 최적화
     const geometry = new THREE.BufferGeometry();
     const uv = new Float32Array(this.count * 2);
     const seeds = new Float32Array(this.count * 4);
@@ -465,7 +452,7 @@ class TextParticleSystem {
         uPixelRatio: { value: this.sceneWrapper.pixelRatio },
       },
       vertexShader: `
-        precision mediump float; // ⭐ highp → mediump
+        precision mediump float;
         attribute vec4 seeds;
 
         uniform sampler2D uPosition;
@@ -486,7 +473,6 @@ class TextParticleSystem {
           vec4 pos = texture2D(uPosition, uv);
           vSeeds = seeds;
 
-          // ⭐ 노이즈 연산 단순화 (2개만 사용)
           float noiseX = snoise(vec3(pos.xy * 10.0, uTime * 0.2));
           float noiseY = snoise(vec3(pos.xy * 10.0, uTime * 0.2 + 100.0));
 
@@ -508,12 +494,12 @@ class TextParticleSystem {
           vec4 viewSpace = modelViewMatrix * vec4(vec3(pos.xy, 0.0), 1.0);
           gl_Position = projectionMatrix * viewSpace;
 
-          gl_PointSize = ((vScale * 2.0) * (uPixelRatio * 0.5) * uParticleScale) + 
+          gl_PointSize = ((vScale * 1.4) * (uPixelRatio * 0.5) * uParticleScale) + 
                          (0.05 * uPixelRatio);
         }
       `,
       fragmentShader: `
-        precision mediump float; // ⭐ highp → mediump
+        precision mediump float;
 
         varying vec4 vSeeds;
         varying vec2 vLocalPos;
@@ -526,6 +512,7 @@ class TextParticleSystem {
         uniform float uAlpha;
 
         void main() {
+          // (원형 파티클이 필요하면 여기서 gl_PointCoord로 마스크를 줄 수 있음)
           float h = 0.8;
           float progress = vVelocity;
 
@@ -607,11 +594,12 @@ interface Props {
   activeIndex: number;
   hoverNum: number;
 }
+
 export default function TextCanvas(props: Props) {
   const { hoverNum, activeIndex } = props;
   const containerRef = useRef<HTMLDivElement | null>(null);
   const hoverRef = useRef(hoverNum);
-  const systemRef = useRef<TextParticleSystem | null>(null); // ✅ 추가
+  const systemRef = useRef<TextParticleSystem | null>(null);
 
   useEffect(() => {
     hoverRef.current = hoverNum;
@@ -625,11 +613,11 @@ export default function TextCanvas(props: Props) {
     const height = el.clientHeight || window.innerHeight;
 
     const renderer = new THREE.WebGLRenderer({
-      antialias: false, // ⭐ 안티앨리어싱 끄기
+      antialias: false,
       alpha: true,
-      powerPreference: "high-performance", // ⭐ 고성능 모드
+      powerPreference: "high-performance",
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // ⭐ pixelRatio 제한
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer.setSize(width, height);
     el.appendChild(renderer.domElement);
 
@@ -666,7 +654,7 @@ export default function TextCanvas(props: Props) {
     };
 
     const system = new TextParticleSystem(sceneWrapper, TEXTS);
-    systemRef.current = system; // ✅ 저장
+    systemRef.current = system;
 
     let animId: number;
     const animate = () => {
@@ -716,13 +704,16 @@ export default function TextCanvas(props: Props) {
 
   useEffect(() => {
     if (!systemRef.current) return;
-    let timeoutId;
+    let timeoutId: number | undefined;
     hoverRef.current = 0;
-    timeoutId = setTimeout(() => {
+    timeoutId = window.setTimeout(() => {
       hoverRef.current = hoverNum;
     }, 500);
     systemRef.current.setActiveText(activeIndex);
-  }, [activeIndex]);
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [activeIndex, hoverNum]);
 
   return (
     <div
