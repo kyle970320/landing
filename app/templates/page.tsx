@@ -34,7 +34,7 @@ import TemplateCard from "./components/TemplateCard";
 
 export default function TemplatesPage() {
   return (
-    <div className="min-h-screen bg-[#FBFBFB] font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-main-bg font-sans overflow-x-hidden">
       <div className="mt-40 page-container grid grid-cols-1 md:grid-cols-2 custom-lg:grid-cols-3 gap-8">
         {TEMPLATES.map((el, index) => {
           const key = `${el.title}_${index}`;

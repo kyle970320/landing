@@ -8,6 +8,7 @@ export default {
         sub: "var(--color-sub)",
         mainTitle: "var(--color-main-title)",
         subTitle: "var(--color-sub-title)",
+        mainBg: "var(--color-main-bg)",
       }
     }
   }

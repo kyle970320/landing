@@ -10,8 +10,11 @@ const navigation = [
   // { name: 'Blog', href: '#' },
   { name: "Templates", href: "/templates" },
   // { name: 'Showcase', href: '/showcase' },
-  // { name: 'Guide', href: 'https://www.notion.so/d-sket/D-SKET-Help-Center-24c3947be60a806ba4ffefa911787f4f' },
   { name: "Pricing", href: "/pricing" },
+  {
+    name: "Guide",
+    href: "/guide",
+  },
   // { name: 'Contact', href: '/contact' },
 ];
 
@@ -37,21 +40,24 @@ export default function Header() {
           </Link>
         </div>
         <div className="hidden lg:flex lg:gap-x-12">
-          {navigation.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              className="text-sm/6 font-semibold text-gray-900 hover:text-indigo-600 relative group"
-            >
-              {item.name}
-              <span className="absolute inset-x-0 bottom-0 h-0.5 bg-indigo-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200 ease-out"></span>
-            </Link>
-          ))}
+          {navigation.map((item) => {
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className="text-sm/6 font-semibold text-gray-900 hover:text-indigo-600 relative group"
+              >
+                {item.name}
+                <span className="absolute inset-x-0 bottom-0 h-0.5 bg-indigo-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200 ease-out"></span>
+              </Link>
+            );
+          })}
         </div>
         <div className="flex flex-1 items-center justify-end gap-x-6">
           <Link
             // href="https://d-sket.notion.site/2553947be60a80aa9669ea600d163062"
             href="https://app.d-sket.io"
+            target="_blank"
             className="hidden lg:inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-md hover:bg-indigo-700 transition-colors shadow-sm"
           >
             <span>대시보드</span>

@@ -16,6 +16,7 @@
   --color-sub: #f6a53a;
   --color-main-title: #333333;
   --color-sub-title: #666666;
+  --color-main-bg: #fbfbfb;
   --breakpoint-custom-lg: 72rem;
 }
 
@@ -49,5 +50,55 @@ body {
   }
   @media (width >= 72rem /* 1152px */) {
     max-width: 72rem /* 1152px */;
+  }
+}
+
+.ripple-circle {
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(0);
+  transition:
+    opacity 0.2s ease-in-out,
+    width 0.5s ease-out,
+    height 0.5s ease-out,
+    transform 0.5s ease-out;
+}
+
+.ripple-circle--active {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  opacity: 1;
+  transform: scale(15); /* 카드 크기에 맞게 조정 */
+  transition:
+    opacity 0.2s ease-in-out,
+    width 0.5s ease-out,
+    height 0.5s ease-out,
+    transform 0.5s ease-out;
+}
+@keyframes scaleUp {
+  0% {
+    width: 0px;
+    height: 0px;
+    scale: 1;
+  }
+  100% {
+    width: 200px;
+    height: 200px;
+    scale: 15;
+  }
+}
+@keyframes scaleDown {
+  0% {
+    width: 200px;
+    height: 200px;
+    scale: 15;
+  }
+  100% {
+    width: 0px;
+    height: 0px;
+    scale: 1;
   }
 }

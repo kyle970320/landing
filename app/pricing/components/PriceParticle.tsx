@@ -28,7 +28,7 @@ export default function PriceParticle() {
           부담 없이 시작하고 필요에 따라 확장하세요.
         </p>
       </div>
-      <div className="page-container h-full mt-[8vh] mx-auto flex relative z-10">
+      <div className="page-container px-0! h-full mt-[8vh] mx-auto flex relative z-10">
         <div
           className="relative top-20 flex-1 px-10 py-5 bg-white rounded-2xl price-shadow"
           onMouseEnter={() => {

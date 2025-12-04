@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export default function ExplainSection() {
   return (
-    <section className="py-16 md:py-24 bg-[#FBFBFB] min-h-screen">
+    <section className="py-16 md:py-24 bg-main-bg min-h-screen">
       <div className="page-container">
         {/* 상단 타이틀 */}
         <div className="text-center mb-12 md:mb-16">
